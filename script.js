@@ -26,11 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
   burger?.addEventListener('click', () => {
     const open = burger.classList.toggle('open');
     menu?.classList.toggle('open', open);
+    document.body.classList.toggle('menu-open', open);
     document.body.style.overflow = open ? 'hidden' : '';
     burger.setAttribute('aria-expanded', open);
   });
   menu?.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    burger?.classList.remove('open'); menu.classList.remove('open'); document.body.style.overflow = '';
+    burger?.classList.remove('open'); menu.classList.remove('open');
+    document.body.classList.remove('menu-open'); document.body.style.overflow = '';
   }));
 
   /* ---------- Scroll progress + spine fill ---------- */
@@ -155,14 +157,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
   search?.addEventListener('input', apply);
 
-  /* ---------- Contact form ---------- */
+  /* ---------- Contact form  (Web3Forms) ----------
+     Submissions POST to Web3Forms and land in the Evonext inbox.
+     Setup: get a free access key at https://web3forms.com, then paste it
+     into the hidden `access_key` input in contact.html.
+     To switch providers later, change ENDPOINT below and swap that input. */
+  const ENDPOINT = 'https://api.web3forms.com/submit';
   const form = document.getElementById('contact-form');
   const ok = document.getElementById('form-success');
-  form?.addEventListener('submit', (e) => {
+  const bad = document.getElementById('form-error');
+  const btn = document.getElementById('submit-btn');
+  const btnLabel = document.getElementById('submit-label');
+
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!form.checkValidity()) { form.reportValidity(); return; }
-    ok?.classList.add('show'); form.reset();
-    setTimeout(() => ok?.classList.remove('show'), 6000);
+
+    ok?.classList.remove('show');
+    bad?.classList.remove('show');
+
+    const data = Object.fromEntries(new FormData(form));
+    // Give the notification email a useful subject line
+    data.subject = '[Website] ' + (data.subject || 'Enquiry') + ' — ' + (data.name || 'Unknown');
+
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.65'; }
+    if (btnLabel) btnLabel.textContent = 'Sending…';
+
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        form.reset();
+        ok?.classList.add('show');
+        ok?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        throw new Error(json.message || 'Request failed');
+      }
+    } catch (err) {
+      console.error('Form submission failed:', err);
+      bad?.classList.add('show');
+    } finally {
+      if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+      if (btnLabel) btnLabel.textContent = 'Send message';
+    }
   });
 
   /* ---------- Newsletter ---------- */

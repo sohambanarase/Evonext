@@ -64,7 +64,7 @@ ul { list-style: none; }
 ::selection { background: var(--lime); color: var(--ink); }
 
 /* Grain + ambient field (very subtle, lifts the flatness) */
-.field {
+.ambient-field {
   position: fixed; inset: 0; z-index: -3; pointer-events: none;
   background:
     radial-gradient(900px 600px at 85% -5%, rgba(92, 210, 198, 0.22), transparent 60%),
@@ -545,14 +545,14 @@ main { animation: fadeUp 0.9s ease both; }
 .wa-inline { margin-top: 28px; }
 
 .form-card { background: var(--glass); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid var(--glass-edge); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); box-shadow: var(--shadow-soft); }
-.field { margin-bottom: 18px; }
-.field label { font-family: var(--grotesk); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 8px; }
-.field input, .field textarea, .field select { width: 100%; font-family: var(--body); font-size: 0.98rem; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(12,26,20,0.18); background: var(--paper-white); outline: none; color: var(--ink); transition: border-color 0.25s ease, box-shadow 0.25s ease; }
-.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(19,160,106,0.12); }
-.field textarea { resize: vertical; min-height: 130px; }
+.form-field { margin-bottom: 18px; }
+.form-field label { font-family: var(--grotesk); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 8px; }
+.form-field input, .form-field textarea, .form-field select { width: 100%; font-family: var(--body); font-size: 0.98rem; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(12,26,20,0.18); background: var(--paper-white); outline: none; color: var(--ink); transition: border-color 0.25s ease, box-shadow 0.25s ease; }
+.form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(26,111,181,0.14); }
+.form-field textarea { resize: vertical; min-height: 130px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .form-note { font-family: var(--grotesk); font-size: 0.76rem; color: var(--ink-faint); margin-top: 8px; }
-.form-success { display: none; margin-top: 16px; padding: 14px 18px; border-radius: 14px; background: rgba(19,160,106,0.12); border: 1px solid rgba(19,160,106,0.3); color: var(--emerald); font-size: 0.92rem; font-weight: 500; }
+.form-success { display: none; margin-top: 16px; padding: 14px 18px; border-radius: 14px; background: rgba(26,111,181,0.10); border: 1px solid rgba(26,111,181,0.28); color: var(--emerald); font-size: 0.92rem; font-weight: 500; }
 .form-success.show { display: block; }
 
 .map-strip { margin-top: 24px; border-radius: var(--radius); overflow: hidden; aspect-ratio: 21/7; position: relative; background: linear-gradient(160deg, var(--porcelain-2), var(--porcelain)); display: grid; place-items: center; border: 1px solid rgba(12,26,20,0.12); }
@@ -775,3 +775,245 @@ html { overflow-x: hidden; }
 @media (hover: none) {
   .nav-links a, .footer-col a, .ulink { padding-block: 10px; }
 }
+/* ============================================================
+   RESPONSIVE OVERHAUL  —  mobile / tablet / desktop
+   Appended last so these rules win over earlier declarations.
+   ============================================================ */
+
+/* ---- Global overflow guards -------------------------------- */
+html, body { max-width: 100%; overflow-x: clip; }
+img, svg, video, iframe { max-width: 100%; height: auto; }
+.marquee, .footer, .band, .hero { max-width: 100vw; }
+
+/* Long words / emails must never push the page sideways */
+.rx-desc, .lead, .footer-brand p, .cinfo-row a, .mm-foot,
+.overlap-panel p, .principle p, .seal p, .tnode p {
+  overflow-wrap: anywhere;
+}
+
+/* ---- Touch devices: kill sticky hover + layout-shifting hovers ---- */
+@media (hover: none) {
+  .rx-row:hover { padding-left: 0; }
+  .rx-row:hover::before { width: 0; }
+  .rx-row:hover .rx-name { color: inherit; }
+  .rx-row:hover .rx-go { background: transparent; color: inherit;
+                         border-color: rgba(12,26,20,0.22); transform: none; }
+  .cap-btn:hover { transform: none; }
+  .cap-btn:hover::before { transform: translateX(-101%); }
+  .cap-btn:hover svg { transform: none; }
+  .seal:hover { transform: none; box-shadow: var(--shadow-soft); }
+  .footer-social a:hover { transform: none; }
+  .footer-col a:hover { padding-left: 0; }
+  .ulink:hover::after { transform: scaleX(0); }
+
+  /* Give feedback on actual press instead */
+  .rx-row:active { background: rgba(26,111,181,0.05); }
+  .cap-btn:active { transform: scale(0.98); }
+  .seal:active { transform: translateY(-6px); }
+}
+
+/* Comfortable minimum tap targets everywhere */
+@media (pointer: coarse) {
+  .cap-btn { padding: 16px 26px; min-height: 48px; }
+  .rx-go { width: 46px; height: 46px; }
+  .footer-social a { width: 44px; height: 44px; }
+  .chip { min-height: 40px; }
+  .hamburger { width: 46px; height: 46px; }
+}
+
+/* ---- Mobile menu: scrollable, never traps content ---------- */
+.mobile-menu {
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-block: max(96px, env(safe-area-inset-top) + 96px) 48px;
+  justify-content: flex-start;
+}
+.mobile-menu a { padding: 14px 0; }
+
+/* ---- Floating buttons respect notches / home bars ---------- */
+.wa-float  { bottom: calc(92px + env(safe-area-inset-bottom));
+             right: calc(24px + env(safe-area-inset-right)); }
+#back-to-top { bottom: calc(24px + env(safe-area-inset-bottom));
+               right: calc(24px + env(safe-area-inset-right)); }
+
+/* ============================================================
+   TABLET  ·  ≤ 1024px
+   ============================================================ */
+@media (max-width: 1024px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 30px 24px; }
+  .tline { max-width: none; }
+  .seal { width: clamp(240px, 44vw, 320px); }
+  .formulary-top { align-items: flex-start; }
+  #product-search { min-width: 0; width: 100%; }
+  .formulary-top > div:last-child { flex: 1 1 260px; }
+  .principle .pbody { gap: 20px 36px; }
+  .contact-aside .lead { margin-bottom: 30px; }
+}
+
+/* ============================================================
+   LANDSCAPE PHONE / SMALL TABLET  ·  ≤ 860px
+   ============================================================ */
+@media (max-width: 860px) {
+  .band { padding-block: clamp(60px, 10vw, 96px); }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .footer-brand { grid-column: 1 / -1; }
+  .feature-rx .fr-visual { max-width: 420px; margin-inline: auto; }
+  .overlap-media { aspect-ratio: 16/11; }
+  .overlap-panel.pull { margin: -40px 12px 0; }
+  .tnode { grid-template-columns: 92px 1fr; }
+  .seal-row { gap: 20px; }
+  .contact-stage { gap: 22px; }
+}
+
+/* ============================================================
+   PHONE  ·  ≤ 640px
+   ============================================================ */
+@media (max-width: 640px) {
+  /* iOS zooms any input under 16px on focus — pin them to 16px */
+  .form-field input, .form-field textarea, .form-field select,
+  .news-form input, #product-search { font-size: 16px; }
+
+  .nav-inner { max-width: calc(100vw - 20px); }
+  .brand { padding-right: 6px; }
+
+  .hero { padding-bottom: 34px; }
+  .hero-sub { max-width: none; }
+  .hero-eyebrow { font-size: 0.66rem; letter-spacing: 0.2em; }
+
+  .principle { grid-template-columns: 1fr; gap: 6px; }
+  .principle .pnum { padding-top: 0; }
+
+  .rx-row { grid-template-columns: 1fr auto; gap: 10px 14px; padding-block: 20px; }
+  .rx-idx { grid-column: 1 / -1; margin-bottom: -4px; }
+  .rx-main { gap: 8px 12px; }
+  .rx-desc { max-width: none; }
+
+  .formulary-top { flex-direction: column; align-items: stretch; }
+  .formulary-top .trust-line { justify-content: flex-start; gap: 8px; }
+  .chip { flex: 0 0 auto; }
+
+  .values .value-row { grid-template-columns: 1fr; gap: 4px; }
+  .tnode { grid-template-columns: 1fr; gap: 6px; padding-block: 22px; }
+  .tnode .ty { padding-top: 0; }
+
+  .cinfo-row { gap: 14px; }
+  .contact-aside, .form-card { padding: 24px 20px; }
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+
+  .newsletter { padding: 24px 20px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 26px; }
+  .footer-brand p { max-width: none; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+  .band--dark { border-radius: 26px; margin-inline: 8px; }
+  .footer { border-radius: 26px 26px 0 0; }
+}
+
+/* ============================================================
+   SMALL PHONE  ·  ≤ 400px
+   ============================================================ */
+@media (max-width: 400px) {
+  :root { --gutter: 16px; }
+  .brand-logo { height: 24px; }
+  .hamburger { width: 40px; height: 40px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .hero-actions .cap-btn { width: 100%; justify-content: center; }
+  .stats-row { gap: 22px 16px; }
+  .rx-tag { font-size: 0.62rem; padding: 3px 10px; }
+  .trust-line { gap: 12px; }
+}
+
+/* ============================================================
+   SHORT LANDSCAPE PHONES  —  don't waste the whole viewport
+   ============================================================ */
+@media (max-height: 520px) and (orientation: landscape) {
+  .hero { padding-top: 118px; }
+  .page-head { padding-top: 110px; }
+  .mobile-menu { justify-content: flex-start; padding-block: 84px 32px; }
+  .mobile-menu a { font-size: 1.6rem; padding: 8px 0; }
+}
+
+/* ============================================================
+   CONTACT — "what happens next" (replaces the map placeholder)
+   ============================================================ */
+.next-strip {
+  margin-top: 26px; padding: clamp(22px, 3vw, 30px);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--porcelain-2), var(--porcelain));
+  border: 1px solid rgba(12,26,20,0.12);
+}
+.next-strip h4 {
+  font-family: var(--grotesk); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft); margin-bottom: 16px;
+}
+.next-strip ol { list-style: none; counter-reset: nx; display: grid; gap: 12px; }
+.next-strip li {
+  counter-increment: nx; position: relative; padding-left: 34px;
+  color: var(--ink-soft); font-size: 0.94rem; line-height: 1.5;
+}
+.next-strip li::before {
+  content: counter(nx); position: absolute; left: 0; top: 1px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--green); color: var(--paper-white);
+  font-family: var(--grotesk); font-size: 0.72rem; font-weight: 600;
+  display: grid; place-items: center;
+}
+
+/* Footer non-link text sits level with the links around it */
+.footer-static { display: block; color: rgba(236,241,238,0.7); padding: 6px 0; font-size: 0.94rem; }
+
+/* ============================================================
+   SPINE CLEARANCE
+   The fixed vertical "EVONEXT / SECTION" label sits at
+   left: var(--spine) + 14px. Content must start clear of it,
+   otherwise body copy runs underneath on mid-width screens.
+   ============================================================ */
+@media (min-width: 861px) {
+  .wrap { padding-inline: max(var(--gutter), calc(var(--spine) + 62px)); }
+  .spine-label { font-size: 0.66rem; letter-spacing: 0.3em; }
+}
+
+/* Below 861px the spine is hidden, so the normal gutter applies */
+
+/* ============================================================
+   NAV PILL OVER THE OPEN MOBILE MENU
+   The glass pill washes out against the dark menu — solidify it
+   so the logo stays legible while the menu is open.
+   ============================================================ */
+body.menu-open .nav-inner {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   CONTACT FORM — status messages + spam honeypot
+   ============================================================ */
+.hp-field {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.form-status {
+  display: none; margin-top: 16px; padding: 14px 18px;
+  border-radius: 14px; font-size: 0.93rem; font-weight: 500; line-height: 1.5;
+}
+.form-status.show { display: block; }
+.form-status a { text-decoration: underline; }
+
+.form-success {
+  background: rgba(26, 111, 181, 0.10);
+  border: 1px solid rgba(26, 111, 181, 0.28);
+  color: var(--emerald);
+}
+.form-error {
+  background: rgba(214, 96, 60, 0.10);
+  border: 1px solid rgba(214, 96, 60, 0.30);
+  color: #A2432A;
+}
+
+#submit-btn:disabled { cursor: wait; }
